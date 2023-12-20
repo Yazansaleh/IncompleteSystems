@@ -1,6 +1,6 @@
 /*------------------Haptic Device Source Code----------*/
 /*----------------------By Yazan Saleh-----------------*/
-/*-----------------------24/Oct/2023-------------------*/
+/*-----------------------20/Dec/2023-------------------*/
 /*------------------------Libraries--------------------*/
 
 #include "Arduino.h"      //Arduino Standard Library 
@@ -66,14 +66,14 @@ void setup() {
 
   //set the baud rate to 115200
 	Serial.begin(115200);
-  //Wait until the IMU is connected over serial 
-  while (!Serial){
-    delay(10); 
-  }
-  //Initialize Midi over BLE
-  BLEMidiServer.begin("Haptic MIDI Device");
-//    BLEMidiServer.begin("Nowwar MIDI Node");
+    //Initialize Midi over BLE
+  BLEMidiServer.begin("Yazan MIDI Node");
 
+
+  //Wait until the IMU is connected over serial 
+ //while (!Serial){
+ //   delay(10); 
+ // }
 
   
     if (!icm.begin_I2C()) {
@@ -125,11 +125,11 @@ void setup() {
   //delay(500);
 	//create a task on core 1 that will measure PPG signal
   // and execute task2Func() with priority 9
-	xTaskCreatePinnedToCore( task2Func,"BME",	10000,NULL, 8, &TaskBME,1); 						
+	xTaskCreatePinnedToCore( task2Func,"BME",	10000,NULL, 5, &TaskBME,1); 						
 	delay(500);
   //create a task on core 1 that will measure IMU angles
   // and execute task3Func() with priority 8
-	xTaskCreatePinnedToCore(task3Func, "IMU", 10000, NULL, 9, &TaskIMU, 1);
+	xTaskCreatePinnedToCore(task3Func, "IMU", 10000, NULL, 8, &TaskIMU, 1);
 	delay(500);
   //create a task on core 0 that will send MIDI over BLE messages
   // and execute task4Func() with priority 10
@@ -195,7 +195,7 @@ void task3Func( void *pvParameters )
       //    Serial.println(ccPitch);
 
 delay(25);//15
-   // delay(1000 / 208); //sampling period 208Hz or ~4.80769ms
+    //delay(1000 / 208); //sampling period 208Hz or ~4.80769ms
 
 	}
 }
@@ -210,16 +210,16 @@ void task4Func( void *pvParameters )
         //first parameter is channel, then controller and value
         //BLEMidiServer.controlChange(0, 6, ccEMG);
         //BLEMidiServer.controlChange(0, 2, ccPPG);
-        BLEMidiServer.controlChange(0, 3, ccRoll);
-        BLEMidiServer.controlChange(0, 4, ccPitch);       
-        BLEMidiServer.controlChange(0, 5, ccYaw);
-        BLEMidiServer.controlChange(0, 6, ccTemp);
-        BLEMidiServer.controlChange(0, 7, ccAlt);       
-        BLEMidiServer.controlChange(0, 8, ccHum);
+        BLEMidiServer.controlChange(0, 103, ccRoll);
+        BLEMidiServer.controlChange(0, 104, ccPitch);       
+        BLEMidiServer.controlChange(0, 105, ccYaw);
+        BLEMidiServer.controlChange(0, 106, ccTemp);
+        BLEMidiServer.controlChange(0, 107, ccAlt);       
+        BLEMidiServer.controlChange(0, 108, ccHum);
        // Serial.print(ccRoll);
       }
 
-    delay(35);//25
+    delay(25);//25
 	}
 }
 void loop() {
