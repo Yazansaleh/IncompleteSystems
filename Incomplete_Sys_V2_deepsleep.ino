@@ -98,7 +98,7 @@ void setup() {
   blinkSemaphore = xSemaphoreCreateBinary();
 
   // Enable wakeup by multiple buttons (all need to be pressed)
-  delay(1000);
+    vTaskDelay(1000);
   esp_sleep_enable_ext1_wakeup(WAKEUP_PIN_BITMASK, ESP_EXT1_WAKEUP_ALL_LOW);
   xSemaphoreGive(blinkSemaphore);
 
@@ -133,12 +133,12 @@ void initializeSensors() {
     Serial.println("ICM20948 Found!");
     }
     icm.enableAccelDLPF(true, ICM20X_ACCEL_FREQ_5_7_HZ);
-    icm.setAccelRange(ICM20948_ACCEL_RANGE_8_G);
+    icm.setAccelRange(ICM20948_ACCEL_RANGE_2_G); 
     /*icm.setAccelRateDivisor(4095);
       uint16_t accel_divisor = icm.getAccelRateDivisor();
       float accel_rate = 1125 / (1.0 + accel_divisor);
     */
-    icm.setGyroRange(ICM20948_GYRO_RANGE_500_DPS);
+    icm.setGyroRange(ICM20948_GYRO_RANGE_250_DPS); 
     /*icm.setGyroRateDivisor(255);
       uint8_t gyro_divisor = icm.getGyroRateDivisor();
       float gyro_rate = 1100 / (1.0 + gyro_divisor);
@@ -302,7 +302,7 @@ void taskSys(void *pvParameters) {
     for (;;) {
     if (digitalRead(BUTTON_PIN_3) == LOW && digitalRead(BUTTON_PIN_4) == LOW) {
       xSemaphoreGive(blinkSemaphore);
-      delay(1200);
+      vTaskDelay(1200);
       esp_deep_sleep_start(); // Enter deep sleep
     }
         vTaskDelay(pdMS_TO_TICKS(5));
