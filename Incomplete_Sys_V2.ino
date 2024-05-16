@@ -19,7 +19,7 @@
 #include "esp_task_wdt.h"
 #include "esp_sleep.h"
 
-#define DEBUG_MODE true
+#define DEBUG_MODE false
 
 // Constants
 #define ICM20948_I2CADDR_DEFAULT 0x68
@@ -205,7 +205,7 @@ void taskBME( void *pvParameters )
   Serial.print(F("Batt Percent: ")); Serial.print(maxlipo.cellPercent()); Serial.println(" %");
     }
         //delay(42);//42
-  vTaskDelay(pdMS_TO_TICKS(100));
+  vTaskDelay(pdMS_TO_TICKS(1000));
 	}
 }
 
@@ -277,7 +277,7 @@ void taskIMU( void *pvParameters )
   }
         //delay(15);//15
         //delay(1000 / 208); //sampling period 208Hz or ~4.80769ms
-  vTaskDelay(pdMS_TO_TICKS(15));
+  vTaskDelay(pdMS_TO_TICKS(20));
 	}
 }
 
@@ -294,7 +294,7 @@ void taskBLE(void *pvParameters) {
         MIDI.sendControlChange(110, ccAlt,    MIDI_CHANNEL);
         MIDI.sendControlChange(111, ccHum,    MIDI_CHANNEL);
         MIDI.sendControlChange(112, ccBatSOC,    MIDI_CHANNEL);
-        vTaskDelay(pdMS_TO_TICKS(25));
+        vTaskDelay(pdMS_TO_TICKS(30));
     }
 }
 
