@@ -19,7 +19,7 @@
 #include "esp_task_wdt.h"
 #include "esp_sleep.h"
 
-#define DEBUG_MODE false
+#define DEBUG_MODE true
 
 // Constants
 #define ICM20948_I2CADDR_DEFAULT 0x68
@@ -29,7 +29,7 @@
 #define BME_MOSI 11
 #define BME_CS 10
 #define MIDI_CHANNEL 1
-#define MIDI_DEVICE_NAME "Yazan Midi"
+#define MIDI_DEVICE_NAME "Sensor 4"
 #define BUTTON_PIN_1 42
 #define BUTTON_PIN_2 45
 #define BUTTON_PIN_3 6
@@ -263,47 +263,47 @@ void taskIMU(void *pvParameters) {
     ccAY = mapConstrainedToMidi(ay, -100, 100);
     ccAZ = mapConstrainedToMidi(az, -100, 100);
     if (DEBUG_MODE) {
-      Serial.print("Accelerometer RAW: ");
-      Serial.print(ax);
-      Serial.print(", ");
-      Serial.print(ay);
-      Serial.print(", ");
-      Serial.println(az);
+      // Serial.print("Accelerometer RAW: ");
+      // Serial.print(ax);
+      // Serial.print(", ");
+      // Serial.print(ay);
+      // Serial.print(", ");
+      // Serial.println(az);
 
-      Serial.print("Gyro RAW: ");
-      Serial.print(gx);
-      Serial.print(", ");
-      Serial.print(gy);
-      Serial.print(", ");
-      Serial.println(gz);
+      // Serial.print("Gyro RAW: ");
+      // Serial.print(gx);
+      // Serial.print(", ");
+      // Serial.print(gy);
+      // Serial.print(", ");
+      // Serial.println(gz);
 
-      Serial.print("Magno RAW: ");
-      Serial.print(mx);
-      Serial.print(", ");
-      Serial.print(my);
-      Serial.print(", ");
-      Serial.println(mz);
+      // Serial.print("Magno RAW: ");
+      // Serial.print(mx);
+      // Serial.print(", ");
+      // Serial.print(my);
+      // Serial.print(", ");
+      // Serial.println(mz);
 
-      Serial.print("Roll: ");
-      Serial.print(roll);
-      Serial.print(", ");
-      Serial.print("Pitch: ");
-      Serial.print(pitch);
-      Serial.print(", ");
-      Serial.print("Yaw: ");
-      Serial.print(yaw);
-      Serial.print(", ");
-      Serial.print("Deltat: ");
-      Serial.println(deltat);
+      // Serial.print("Roll: ");
+      // Serial.print(roll);
+      // Serial.print(", ");
+      // Serial.print("Pitch: ");
+      // Serial.print(pitch);
+      // Serial.print(", ");
+      // Serial.print("Yaw: ");
+      // Serial.print(yaw);
+      // Serial.print(", ");
+      // Serial.print("Deltat: ");
+      // Serial.println(deltat);
 
-      Serial.print("ccRoll: ");
-      Serial.print(ccRoll);
-      Serial.print(", ");
-      Serial.print("ccPitch: ");
-      Serial.print(ccPitch);
-      Serial.print(", ");
-      Serial.print("ccYaw: ");
-      Serial.println(ccYaw);
+      // Serial.print("ccRoll: ");
+      // Serial.print(ccRoll);
+      // Serial.print(", ");
+      // Serial.print("ccPitch: ");
+      // Serial.print(ccPitch);
+      // Serial.print(", ");
+      // Serial.print("ccYaw: ");
+      // Serial.println(ccYaw);
     }
     //delay(15);//15
     //delay(1000 / 208); //sampling period 208Hz or ~4.80769ms
@@ -354,49 +354,49 @@ void taskBLE(void *pvParameters) {
     // Check each button's toggle state and perform actions
     if (toggleStates[0]) {
       // Button 0 is ON
-      //Serial.println("Button 0: ON - Performing action for Button 0 ON state");
+      Serial.println("Button 0: ON - Performing action for Button 0 ON state");
       MIDI.sendControlChange(113, 127, MIDI_CHANNEL);
       // Perform action when Button 0 is ON
     } else {
       // Button 0 is OFF
-      // Serial.println("Button 0: OFF - Performing action for Button 0 OFF state");
+      Serial.println("Button 0: OFF - Performing action for Button 0 OFF state");
       MIDI.sendControlChange(113, 0, MIDI_CHANNEL);
       // Perform action when Button 0 is OFF
     }
 
     if (toggleStates[1]) {
       // Button 1 is ON
-      // Serial.println("Button 1: ON - Performing action for Button 1 ON state");
-      MIDI.sendControlChange(113, 127, MIDI_CHANNEL);
+      Serial.println("Button 1: ON - Performing action for Button 1 ON state");
+      MIDI.sendControlChange(114, 127, MIDI_CHANNEL);
       // Perform action when Button 1 is ON
     } else {
       // Button 1 is OFF
-      // Serial.println("Button 1: OFF - Performing action for Button 1 OFF state");
-      MIDI.sendControlChange(113, 0, MIDI_CHANNEL);
+      Serial.println("Button 1: OFF - Performing action for Button 1 OFF state");
+      MIDI.sendControlChange(114, 0, MIDI_CHANNEL);
       // Perform action when Button 1 is OFF
     }
 
     if (toggleStates[2]) {
       // Button 2 is ON
-      // Serial.println("Button 2: ON - Performing action for Button 2 ON state");
-      MIDI.sendControlChange(113, 127, MIDI_CHANNEL);
+      Serial.println("Button 2: ON - Performing action for Button 2 ON state");
+      MIDI.sendControlChange(115, 127, MIDI_CHANNEL);
       // Perform action when Button 2 is ON
     } else {
       // Button 2 is OFF
-      // Serial.println("Button 2: OFF - Performing action for Button 2 OFF state");
-      MIDI.sendControlChange(113, 0, MIDI_CHANNEL);
+      Serial.println("Button 2: OFF - Performing action for Button 2 OFF state");
+      MIDI.sendControlChange(115, 0, MIDI_CHANNEL);
       // Perform action when Button 2 is OFF
     }
 
     if (toggleStates[3]) {
       // Button 3 is ON
-      // Serial.println("Button 3: ON - Performing action for Button 3 ON state");
-      MIDI.sendControlChange(113, 127, MIDI_CHANNEL);
+      Serial.println("Button 3: ON - Performing action for Button 3 ON state");
+      MIDI.sendControlChange(116, 127, MIDI_CHANNEL);
       // Perform action when Button 3 is ON
     } else {
       // Button 3 is OFF
-      // Serial.println("Button 3: OFF - Performing action for Button 3 OFF state");
-      MIDI.sendControlChange(113, 0, MIDI_CHANNEL);
+      Serial.println("Button 3: OFF - Performing action for Button 3 OFF state");
+      MIDI.sendControlChange(116, 0, MIDI_CHANNEL);
       // Perform action when Button 3 is OFF
     }
 
