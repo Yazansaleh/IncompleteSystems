@@ -19,7 +19,7 @@
 #include "esp_task_wdt.h"
 #include "esp_sleep.h"
 
-#define DEBUG_MODE true
+#define DEBUG_MODE false
 
 // Constants
 #define ICM20948_I2CADDR_DEFAULT 0x68
@@ -29,7 +29,7 @@
 #define BME_MOSI 11
 #define BME_CS 10
 #define MIDI_CHANNEL 1
-#define MIDI_DEVICE_NAME "Sensor 4"
+#define MIDI_DEVICE_NAME "Yazan Midi"
 #define BUTTON_PIN_1 42
 #define BUTTON_PIN_2 45
 #define BUTTON_PIN_3 6
@@ -46,7 +46,6 @@ Adafruit_BME280 bme;  // I2C
 Adafruit_Sensor *icm_temp, *icm_accel, *icm_gyro, *icm_mag;
 SF fusion;
 Adafruit_MAX17048 maxlipo;
-float accelThreshold = 19.0;
 
 // BLE MIDI Instance
 BLEMIDI_CREATE_INSTANCE(MIDI_DEVICE_NAME, MIDI)
@@ -71,6 +70,18 @@ int ccTemp;
 int ccAlt;
 int ccHum;
 int ccBatSOC;
+
+//Variables for button toggling
+const int buttonPins[] = { BUTTON_PIN_1, BUTTON_PIN_2, BUTTON_PIN_3, BUTTON_PIN_4 };  // Pin numbers for the four buttons
+bool toggleStates[] = { false, false, false, false };                                 // Toggle states for each button
+
+int buttonStates[] = { HIGH, HIGH, HIGH, HIGH };      // Current button states
+int lastButtonStates[] = { HIGH, HIGH, HIGH, HIGH };  // Last button states
+
+unsigned long lastDebounceTimes[] = { 0, 0, 0, 0 };  // Debounce timers for each button
+unsigned long debounceDelay = 50;                    // Debounce delay (same for all buttons)
+
+
 
 // Function Declarations
 void initializeSensors();
@@ -236,6 +247,7 @@ void taskIMU(void *pvParameters) {
     deltat = fusion.deltatUpdate();  //update the sensor values into the sensor fusion algorithm
 
 
+
     //mahony filtered is updated with acc/gyro values
     fusion.MadgwickUpdate(gx, gy, gz, ax, ay, az, mx, my, mz, deltat);  //else use the magwick, it is slower but more accurate
     roll = fusion.getRoll();                                            //Calculate Roll angle
@@ -252,13 +264,6 @@ void taskIMU(void *pvParameters) {
     ccAZ = mapConstrainedToMidi(az, -100, 100);
     if (DEBUG_MODE) {
       Serial.print("Accelerometer RAW: ");
-      //=============== calculating max accel
-      // if(ay>maxAX)
-      // {
-      //   maxAX = ay;
-      // }
-      // Serial.println(maxAX);
-      //===================
       Serial.print(ax);
       Serial.print(", ");
       Serial.print(ay);
@@ -299,11 +304,6 @@ void taskIMU(void *pvParameters) {
       Serial.print(", ");
       Serial.print("ccYaw: ");
       Serial.println(ccYaw);
-
-      Serial.println(digitalRead(BUTTON_PIN_1));
-      Serial.println(digitalRead(BUTTON_PIN_2));
-      Serial.println(digitalRead(BUTTON_PIN_3));
-      Serial.println(digitalRead(BUTTON_PIN_4));
     }
     //delay(15);//15
     //delay(1000 / 208); //sampling period 208Hz or ~4.80769ms
@@ -317,53 +317,118 @@ void taskBLE(void *pvParameters) {
     MIDI.sendControlChange(103, ccRoll, MIDI_CHANNEL);
     MIDI.sendControlChange(104, ccPitch, MIDI_CHANNEL);
     MIDI.sendControlChange(105, ccYaw, MIDI_CHANNEL);
-    // MIDI.sendControlChange(106, ccAX,   MIDI_CHANNEL);
-    // MIDI.sendControlChange(107, ccAY,    MIDI_CHANNEL);
-    // MIDI.sendControlChange(108, ccAZ,    MIDI_CHANNEL);
-    if (ax > accelThreshold) {
-      MIDI.sendControlChange(106, 127, MIDI_CHANNEL);
-    } else {
-      MIDI.sendControlChange(106, 0, MIDI_CHANNEL);
-    }
-    if (ay > accelThreshold) {
-      MIDI.sendControlChange(107, 127, MIDI_CHANNEL);
-    } else {
-      MIDI.sendControlChange(107, 0, MIDI_CHANNEL);
-    }
-    if (az > accelThreshold) {
-      MIDI.sendControlChange(108, 127, MIDI_CHANNEL);
-    } else {
-      MIDI.sendControlChange(108, 0, MIDI_CHANNEL);
-    }
-
+    MIDI.sendControlChange(106, ccAX, MIDI_CHANNEL);
+    MIDI.sendControlChange(107, ccAY, MIDI_CHANNEL);
+    MIDI.sendControlChange(108, ccAZ, MIDI_CHANNEL);
     MIDI.sendControlChange(109, ccTemp, MIDI_CHANNEL);
     MIDI.sendControlChange(110, ccAlt, MIDI_CHANNEL);
     MIDI.sendControlChange(111, ccHum, MIDI_CHANNEL);
     MIDI.sendControlChange(112, ccBatSOC, MIDI_CHANNEL);
 
-    if (digitalRead(BUTTON_PIN_1) == LOW) {
+    //Button toggle handling
+    for (int i = 0; i < 4; i++) {
+      int reading = digitalRead(buttonPins[i]);  // Read the button
+
+      // If the button state has changed
+      if (reading != lastButtonStates[i]) {
+        lastDebounceTimes[i] = millis();  // Reset the debounce timer for this button
+      }
+
+      // If the debounce time has passed
+      if ((millis() - lastDebounceTimes[i]) > debounceDelay) {
+        // If the button state has changed and is now pressed
+        if (reading != buttonStates[i] && reading == LOW) {
+          toggleStates[i] = !toggleStates[i];  // Toggle the state for the button
+          Serial.print("Button ");
+          Serial.print(i);
+          Serial.print(" is now ");
+          Serial.println(toggleStates[i] ? "ON" : "OFF");
+        }
+
+        buttonStates[i] = reading;  // Update the button state
+      }
+
+      lastButtonStates[i] = reading;  // Save the current state for the next loop
+    }
+
+    // Check each button's toggle state and perform actions
+    if (toggleStates[0]) {
+      // Button 0 is ON
+      //Serial.println("Button 0: ON - Performing action for Button 0 ON state");
       MIDI.sendControlChange(113, 127, MIDI_CHANNEL);
+      // Perform action when Button 0 is ON
     } else {
+      // Button 0 is OFF
+      // Serial.println("Button 0: OFF - Performing action for Button 0 OFF state");
       MIDI.sendControlChange(113, 0, MIDI_CHANNEL);
+      // Perform action when Button 0 is OFF
     }
 
-    if (digitalRead(BUTTON_PIN_2) == LOW) {
-      MIDI.sendControlChange(114, 127, MIDI_CHANNEL);
+    if (toggleStates[1]) {
+      // Button 1 is ON
+      // Serial.println("Button 1: ON - Performing action for Button 1 ON state");
+      MIDI.sendControlChange(113, 127, MIDI_CHANNEL);
+      // Perform action when Button 1 is ON
     } else {
-      MIDI.sendControlChange(114, 0, MIDI_CHANNEL);
+      // Button 1 is OFF
+      // Serial.println("Button 1: OFF - Performing action for Button 1 OFF state");
+      MIDI.sendControlChange(113, 0, MIDI_CHANNEL);
+      // Perform action when Button 1 is OFF
     }
 
-    if (digitalRead(BUTTON_PIN_3) == LOW) {
-      MIDI.sendControlChange(115, 127, MIDI_CHANNEL);
+    if (toggleStates[2]) {
+      // Button 2 is ON
+      // Serial.println("Button 2: ON - Performing action for Button 2 ON state");
+      MIDI.sendControlChange(113, 127, MIDI_CHANNEL);
+      // Perform action when Button 2 is ON
     } else {
-      MIDI.sendControlChange(115, 0, MIDI_CHANNEL);
+      // Button 2 is OFF
+      // Serial.println("Button 2: OFF - Performing action for Button 2 OFF state");
+      MIDI.sendControlChange(113, 0, MIDI_CHANNEL);
+      // Perform action when Button 2 is OFF
     }
 
-    if (digitalRead(BUTTON_PIN_4) == LOW) {
-      MIDI.sendControlChange(116, 127, MIDI_CHANNEL);
+    if (toggleStates[3]) {
+      // Button 3 is ON
+      // Serial.println("Button 3: ON - Performing action for Button 3 ON state");
+      MIDI.sendControlChange(113, 127, MIDI_CHANNEL);
+      // Perform action when Button 3 is ON
     } else {
-      MIDI.sendControlChange(116, 0, MIDI_CHANNEL);
+      // Button 3 is OFF
+      // Serial.println("Button 3: OFF - Performing action for Button 3 OFF state");
+      MIDI.sendControlChange(113, 0, MIDI_CHANNEL);
+      // Perform action when Button 3 is OFF
     }
+
+
+    // End button togglingg
+
+//If works delete **********************
+
+    // if (digitalRead(BUTTON_PIN_1) == LOW) {
+    //   MIDI.sendControlChange(113, 127, MIDI_CHANNEL);
+    // } else {
+    //   MIDI.sendControlChange(113, 0, MIDI_CHANNEL);
+    // }
+
+    // if (digitalRead(BUTTON_PIN_2) == LOW) {
+    //   MIDI.sendControlChange(114, 127, MIDI_CHANNEL);
+    // } else {
+    //   MIDI.sendControlChange(114, 0, MIDI_CHANNEL);
+    // }
+
+    // if (digitalRead(BUTTON_PIN_3) == LOW) {
+    //   MIDI.sendControlChange(115, 127, MIDI_CHANNEL);
+    // } else {
+    //   MIDI.sendControlChange(115, 0, MIDI_CHANNEL);
+    // }
+
+    // if (digitalRead(BUTTON_PIN_4) == LOW) {
+    //   MIDI.sendControlChange(116, 127, MIDI_CHANNEL);
+    // } else {
+    //   MIDI.sendControlChange(116, 0, MIDI_CHANNEL);
+    // }
+//***********************************
     vTaskDelay(pdMS_TO_TICKS(30));
   }
 }
